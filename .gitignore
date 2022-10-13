@@ -11,3 +11,5 @@ models/__pycache__/
 tools/__pycache__/
 weights/__pycache__/
 image
+yolov5/
+yolov7/
