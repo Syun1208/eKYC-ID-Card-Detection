@@ -8,6 +8,7 @@ sys.path.insert(0, '/home/long/Desktop/IDCardDetectionandRecognition')
 import argparse
 import cv2
 import tqdm
+import logging
 import io
 from PIL import Image
 from tabulate import tabulate
@@ -20,7 +21,12 @@ from deploy.rotation import rotationBaseOn4CornersYOLO
 from pathlib import Path
 
 # ROOT = os.path.dirname(os.path.realpath('__file__'))
-ROOT = str(Path.home())
+# ROOT = str(Path.home())
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 
 def merge(arr, l, m, r):
@@ -76,10 +82,10 @@ def parse_arg():
     parser.add_argument('--img_path', type=str, help='Image path')
     parser.add_argument('--folder_path', type=str, help='Folder Image path')
     parser.add_argument('--folder_save_rotation', type=str,
-                        default=os.path.join(ROOT, 'Downloads/datasets/datasetsRotation/correctingImages'),
+                        default=str(ROOT / 'results/correct'),
                         required=False)
     parser.add_argument('--folder_save_detection', type=str,
-                        default=os.path.join(ROOT, 'Downloads/datasets/datasetsRotation/detectBoundingBox'),
+                        default=str(ROOT / 'results/detect'),
                         required=False)
     parser.add_argument('--option', type=int, help='activate 1 to open camera or 0 to add image')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
@@ -129,17 +135,17 @@ def predict(image, filename, args):
         coordinatePolygon, coordinateVisualize = convertBoundingBox2Polygon(coordinate)
         imagePolygon = cv2.polylines(cv2.resize(imageRotated, (640, 640)), [coordinateVisualize], True, (0, 255, 0),
                                      thickness=3)
-        if not os.path.exists(args.folder_save_detection):
-            os.mkdir(args.folder_save_detection)
-        cv2.imwrite(os.path.join(args.folder_save_detection, filename), predictImage)
+        if not os.path.exists(os.path.abspath(args.folder_save_detection)):
+            os.makedirs(os.path.abspath(args.folder_save_detection))
+        cv2.imwrite(os.path.join(os.path.abspath(args.folder_save_detection), filename), predictImage)
         # Image Alignment
         for i in range(len(coordinate)):
             coordinate[i].pop(-1)
         imageAlignment = processingROI(cv2.resize(imageRotated, (640, 640)), coordinate)
         alignedImage = imageAlignment()
-        if not os.path.exists(args.folder_save_rotation):
-            os.mkdir(args.folder_save_rotation)
-        cv2.imwrite(os.path.join(args.folder_save_rotation, filename), alignedImage)
+        if not os.path.exists(os.path.abspath(args.folder_save_rotation)):
+            os.makedirs(os.path.abspath(args.folder_save_rotation))
+        cv2.imwrite(os.path.join(os.path.abspath(args.folder_save_rotation), filename), alignedImage)
         # cv2.imwrite('/home/long/Downloads/datasets/datasetsRotation/correctingImages/my2.jpg', imagePolygon)
         # cv2.imwrite('/home/long/Downloads/datasets/datasetsRotation/correctingImages/my1.jpg', predictImage)
         # cv2.imwrite('/home/long/Downloads/datasets/datasetsRotation/correctingImages/my.jpg', alignedImage)
@@ -150,7 +156,8 @@ def predict(image, filename, args):
                        "confidence_score": score[i]}
             coordinateBoundingBox.append(results)
         return coordinateBoundingBox, coordinatePolygon, alignedImage
-    except Exception:
+    except Exception as e:
+        logging.error(e)
         text1 = ["NOTICE"]
         text2 = [["PLEASE TRY AGAIN !"], ["SUGGESTION: PUT YOUR IMAGE INCLUDING BACKGROUND"]]
         print(tabulate(text2, text1, tablefmt="pretty"))
@@ -206,14 +213,14 @@ def main():
         # cv2.imwrite('/home/long/Downloads/datasets/datasetsRotation/correctingImages/my.jpg', alignedImage)
     # Recognition
     except Exception as error:
-        print(error)
+        logging.error(error)
         text1 = ["NOTICE"]
         text2 = [["PLEASE TRY AGAIN !"], ["SUGGESTION: PUT YOUR IMAGE INCLUDING BACKGROUND"]]
         print(tabulate(text2, text1, tablefmt="pretty"))
 
 
 if __name__ == "__main__":
-    # args = parse_arg()
+    args = parse_arg()
     # v = predict(cv2.imread(args.img_path))
     # print(v)
     main()

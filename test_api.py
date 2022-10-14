@@ -1,24 +1,32 @@
+import logging
+
 import requests
 import argparse
 import tqdm
 import json
 import os
+import sys
 from IPython.display import clear_output
 from pathlib import Path
 
-ROOT = str(Path.home())
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+ROOT = Path(os.path.abspath(ROOT / Path.cwd()))  # relative
 
 
 def parse_arg():
     parser = argparse.ArgumentParser()
     parser.add_argument('--local_host', type=str, help='your local host connection', default='0.0.0.0')
     parser.add_argument('--port', type=str, help='your port connection', default='8000')
-    parser.add_argument('--folder', type=str, help='folder image path', default=os.path.join(ROOT, 'Downloads'))
-    parser.add_argument('--image', type=str, help='image path', default=os.path.join(ROOT, 'Downloads/long.jpg'))
+    parser.add_argument('--json_results', type=str, help='your port connection', default=ROOT / 'results/results.json')
+    parser.add_argument('--folder', type=str, help='folder image test', default=ROOT / 'image')
+    parser.add_argument('--image', type=str, help='image path', default=os.path.join(ROOT, 'image/long.jpg'))
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+def main():
     args = parse_arg()
     response = {}
     listResults = []
@@ -31,19 +39,16 @@ if __name__ == "__main__":
             file = {'image': open(os.path.join(args.folder, image), 'rb')}
             data = {'option': option}
             response = requests.post(url=url, files=file, params=data)
-            # response_dict = json.loads(response.text)
             clear_output(wait=True)
             listResults.append(response.json())
             print(response.json(), '\n')
-            # print(response_dict)
-            # print(os.path.dirname(os.path.realpath('__file__')))
-            with open(os.path.join(ROOT, 'Desktop/base64.json'), 'w') as fileSave:
+            with open(args.json_results, 'w') as fileSave:
                 json.dump(listResults, fileSave, indent=4)
     else:
         file = {'image': open(args.image, 'rb')}
         data = {'option': option}
         response = requests.post(url=url, files=file, params=data)
-        with open(os.path.join(ROOT, 'Desktop/base64.json'), 'w') as fileSave:
+        with open(args.json_results, 'w') as fileSave:
             fileSave.seek(0)
             json.dump(response.json(), fileSave, indent=4)
             fileSave.truncate()
@@ -63,3 +68,10 @@ if __name__ == "__main__":
     #
     # # Print output
     # print(requests.status_codes, response.json())
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        logging.error(e)

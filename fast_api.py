@@ -55,12 +55,18 @@ from typing import List, Union, Optional
 from main import predict
 import numpy as np
 from pathlib import Path
+import sys
 from starlette.responses import RedirectResponse
 
 app_desc = """<h2>Try this app by uploading any image with `predict/image`</h2>"""
 app = FastAPI(title="Chúa tể phát hiện cccd/cmnd", description=app_desc)
 DETECTION_URL = '/id-card-yolo/detect/'
-ROOT = str(Path.home())
+# ROOT = str(Path.home())
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 
 def parse_arg():
@@ -68,10 +74,10 @@ def parse_arg():
     parser.add_argument('--local_host', type=str, help='your local host connection', default='0.0.0.0')
     parser.add_argument('--port', type=int, help='your port connection', default=8000)
     parser.add_argument('--folder_save_rotation', type=str,
-                        default=os.path.join(ROOT, 'Downloads/datasets/datasetsRotation/correctingImages'),
+                        default=str(ROOT) + '/results/correct',
                         required=False)
     parser.add_argument('--folder_save_detection', type=str,
-                        default=os.path.join(ROOT, 'Downloads/datasets/datasetsRotation/detectBoundingBox'),
+                        default=str(ROOT) + '/results/detect',
                         required=False)
     return parser.parse_args()
 
