@@ -1,0 +1,36 @@
+<script type="text/javascript">
+    function previewFile() {
+        const preview = document.querySelector('img');
+        var file = document.getElementById('fileInput').files[0];
+        const reader = new FileReader();
+        reader.addEventListener("load", function () {
+            preview.src = reader.result; // show image in <img> tag
+        }, false);
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function uploadFile(file) {
+        var file = document.getElementById('fileInput').files[0];
+        if (file) {
+            var formData = new FormData();
+            formData.append('file', file);
+            fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("serverMsg").innerHTML = data.message;
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+        }
+    }
+</script>
+<input type="file" id="fileInput" onchange="previewFile()"><br>
+<input type="button" value="Upload Image" onclick="uploadFile()">
+<p id="serverMsg"></p>
+<img height="200">
