@@ -32,8 +32,6 @@ class processingROI:
     def __init__(self, image, boundingBoxYOLO):
         self.boundingBoxYOLO = np.array(boundingBoxYOLO)
         self.image = image
-        # self.file = address
-        # self.folderSave = '/home/long/Downloads/datasets/datasetsYOLO/testAlignment'
         self.coordinateCenter = []
 
     def get_center_point(self):
@@ -45,6 +43,7 @@ class processingROI:
 
     def order_points(self):
         rect = np.zeros((4, 2), dtype="float32")
+        # self.suitable_cutting()
         s = self.get_center_point().sum(axis=1)
         rect[0] = self.get_center_point()[np.argmin(s)]
         rect[2] = self.get_center_point()[np.argmax(s)]
@@ -70,15 +69,18 @@ class processingROI:
         warped = cv2.warpPerspective(self.image, M, (maxWidth, maxHeight))
         return warped
 
+    def suitable_cutting(self):
+        for i in range(len(self.get_center_point())):
+            if self.get_center_point()[i][0] < 2:
+                self.get_center_point()[i][0] = 0
+            elif (self.get_center_point()[i] > (self.image.shape[1] - 10, self.image.shape[0] - 10)).all():
+                self.get_center_point()[i] = (self.image.shape[1], self.image.shape[0] - 10)
+            elif self.get_center_point()[i][0] > self.image.shape[1] - 10 and self.get_center_point()[i][1] < 2:
+                self.get_center_point()[i] = (self.image.shape[1], 0)
+            elif self.get_center_point()[i][0] < 2 and self.get_center_point()[i][1] > self.image.shape[0] - 10:
+                self.get_center_point()[i] = (0, self.image.shape[0])
+
     def __call__(self, *args, **kwargs):
-        # if not os.path.exists(self.folderSave):
-        #     os.mkdir(self.folderSave)
-        # cv2.imwrite(os.path.join(self.folderSave, self.file.split('/')[-1])
-        #             , self._perspective_transform())
-        # print('[INFO] FILE SAVE IMAGE ALIGNMENT: ',
-        #       os.path.join(self.folderSave, self.file.split('/')[-1]))
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
         return self._perspective_transform()
 
 

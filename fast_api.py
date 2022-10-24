@@ -52,15 +52,19 @@ from starlette.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse, StreamingResponse, HTMLResponse
 from typing import List, Union, Optional
-from main import predict
+from main import predict, predict_yolov5
 import numpy as np
 from pathlib import Path
 import sys
+import socket
 from starlette.responses import RedirectResponse
 
 app_desc = """<h2>Try this app by uploading any image with `predict/image`</h2>"""
 app = FastAPI(title="Chúa tể phát hiện cccd/cmnd", description=app_desc)
 DETECTION_URL = '/id-card-yolo/detect/'
+LABEL_STUDIO = '/id-card-yolo/detect_label_studio/'
+hostname = socket.gethostname()
+IP_ADDRESS = socket.gethostbyname(hostname)
 # ROOT = str(Path.home())
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]
@@ -71,7 +75,9 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 def parse_arg():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--local_host', type=str, help='your local host connection', default='0.0.0.0')
+    parser.add_argument('--local_host', type=str, help='your local host connection', default=IP_ADDRESS)
+    parser.add_argument('--weights', type=str, help='initial weights path', default='weights/yolov7x/yolov7x.pt')
+
     parser.add_argument('--port', type=int, help='your port connection', default=8000)
     parser.add_argument('--folder_save_rotation', type=str,
                         default=str(ROOT) + '/results/correct',
@@ -155,6 +161,61 @@ async def detect(image: UploadFile = File(...), option: str = None):
             "encoded_image": encoded_string}
     else:
         return {'image_name': image.filename}, coordinateBoundingBox, {'polygon_coordinates': coordinatePolygon}
+
+
+@app.post(LABEL_STUDIO)
+async def detect_label_studio(image: UploadFile = File(...), option: str = None):
+    if image.filename.split('.')[-1] in ("jpg", "jpeg", "png"):
+        pass
+    else:
+        raise HTTPException(status_code=415, detail="Item not found")
+    # with open(fileName, 'rb') as f:
+    #     encoded_image = base64.b64encode(f.read())
+    # decoded_image = encoded_image.decode('utf-8')
+    args = parse_arg()
+    contents = await image.read()
+    array = np.fromstring(contents, np.uint8)
+    img = cv2.imdecode(array, cv2.IMREAD_COLOR)
+    coordinatePolygon, predictedImage = predict_yolov5(img, image.filename, args)
+    # res, im_png = cv2.imencode(".png", predictedImage)
+    # predictedImage = base64str_to_PILImage(predictedImage)
+    # buffered = BytesIO()
+    # Image.fromarray(predictedImage).save(buffered, format="JPEG")
+    # img_str = base64.b64encode(buffered.getvalue())
+    # encoded_string = image_to_base64(predictedImage)
+    # img_decode = BytesIO(base64.b64decode(img_str))
+    # print(predictedImage)
+    # dataStr = json.dumps(predictedImage)
+    #
+    # base64EncodedStr = base64.b64encode(dataStr.encode('utf-8'))
+    # print(base64EncodedStr)
+    #
+    # print('decoded', base64.b64decode(base64EncodedStr))
+    return {
+            'data': {'image': '/data/local-files/?d=/home/long/Downloads/datasets/augment_padding/' + image.filename},
+            "annotations": [
+                {
+                    "result": [
+                        {
+                            "original_width": img.shape[1],
+                            "original_height": img.shape[0],
+                            "image_rotation": 0,
+                            "value": {
+                                "points": coordinatePolygon,
+                                "polygonlabels": [
+                                    "top-cmnd"
+                                ]
+                            },
+                            "id": "796e373c3a",
+                            "from_name": "label",
+                            "to_name": "image",
+                            "type": "polygonlabels",
+                            "origin": "manual"
+                        }
+                    ]
+                }
+            ],
+            "predictions": []}
 
 
 @app.post('/yolo-id-card/request/')

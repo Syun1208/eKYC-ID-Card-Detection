@@ -1,8 +1,17 @@
 import sys
-
-sys.path.insert(0, '/home/long/Desktop/IDCardDetectionandRecognition')
 import torch
 import cv2
+import numpy as np
+from pathlib import Path
+import os
+
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+WORK_DIR = os.path.dirname(ROOT)
+sys.path.insert(0, WORK_DIR)
 
 
 class detection:
@@ -13,6 +22,7 @@ class detection:
         # self.folderSave = os.path.join(list(image.split('/')).pop(-1))
         self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         self.names = ['top_left', 'top_right', 'bottom_right', 'bottom_left']
+        # self.names = ['top-cmnd', 'back-cmnd', 'top-cccd', 'back-cccd', 'top-chip', 'back-chip', 'passport', 'rotate']
 
     def v5(self, modelDetection):
         listCoordinate = []

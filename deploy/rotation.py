@@ -1,7 +1,5 @@
 import sys
-
-sys.path.insert(0, '/home/long/Desktop/IDCardDetectionandRecognition')
-
+from pathlib import Path
 from tools.perspective_transform import processingROI, convertBoundingBoxYOLO2COCO
 import numpy as np
 import imutils
@@ -10,6 +8,14 @@ import os
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 from plyer import notification
+
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+WORK_DIR = os.path.dirname(ROOT)
+sys.path.insert(0, WORK_DIR)
 
 
 def rotate_bound(image, angle):
@@ -56,7 +62,6 @@ class rotationBaseOn4CornersYOLO(processingROI):
         self.image = image
         # self.address = os.path.splitext(image.split('/')[-1])
         self.boundingBoxYOLO = boundingBoxYOLO
-        self.folderSave = '/home/long/Downloads/datasets/datasetsRotation/dataFix/0'
         self.vectorOx = (self.image.shape[1], 0)
         self.angle = 0
 
@@ -88,10 +93,6 @@ class rotationBaseOn4CornersYOLO(processingROI):
             message=str(angle) + ' DEGREES',
             timeout=5
         )
-        # print("[INFO] FILE SAVE ROTATION: " + os.path.join(self.folderSave, self.address[0] + '.jpg'))
-        # if not os.path.exists(self.folderSave):
-        #     os.mkdir(self.folderSave)
-        # cv2.imwrite(os.path.join(self.folderSave, self.address[0] + '.jpg'), rotated)
         return rotated
 
 
