@@ -21,7 +21,7 @@ def main():
 
 
 def import2json():
-    folder_datasets = '/home/long/Downloads/datasets/augment_padding'
+    folder_datasets = '/home/long/Downloads/datatests'
     list_data = []
     for file in os.listdir(folder_datasets):
         data = {'data': {'image': os.path.join('/data/local-files/?d=' + folder_datasets, file)}}

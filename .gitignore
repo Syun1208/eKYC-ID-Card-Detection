@@ -13,6 +13,6 @@ weights/__pycache__/
 image
 yolov5/
 yolov7/
-results
-venv
-runs
+results/
+venv/
+runs/

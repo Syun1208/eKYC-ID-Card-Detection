@@ -52,7 +52,7 @@ from starlette.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import FileResponse, StreamingResponse, HTMLResponse
 from typing import List, Union, Optional
-from main import predict, predict_yolov5
+from main import predict_yolov7, predict_yolov5
 import numpy as np
 from pathlib import Path
 import sys
@@ -141,7 +141,7 @@ async def detect(image: UploadFile = File(...), option: str = None):
     contents = await image.read()
     array = np.fromstring(contents, np.uint8)
     img = cv2.imdecode(array, cv2.IMREAD_COLOR)
-    coordinateBoundingBox, coordinatePolygon, predictedImage = predict(img, image.filename, args)
+    coordinateBoundingBox, coordinatePolygon, predictedImage = predict_yolov7(img, image.filename, args)
     # res, im_png = cv2.imencode(".png", predictedImage)
     # predictedImage = base64str_to_PILImage(predictedImage)
     # buffered = BytesIO()
@@ -192,36 +192,36 @@ async def detect_label_studio(image: UploadFile = File(...), option: str = None)
     #
     # print('decoded', base64.b64decode(base64EncodedStr))
     return {
-            'data': {'image': '/data/local-files/?d=/home/long/Downloads/datasets/augment_padding/' + image.filename},
-            "annotations": [
-                {
-                    "result": [
-                        {
-                            "original_width": img.shape[1],
-                            "original_height": img.shape[0],
-                            "image_rotation": 0,
-                            "value": {
-                                "points": coordinatePolygon,
-                                "polygonlabels": [
-                                    "top-cmnd"
-                                ]
-                            },
-                            "id": "796e373c3a",
-                            "from_name": "label",
-                            "to_name": "image",
-                            "type": "polygonlabels",
-                            "origin": "manual"
-                        }
-                    ]
-                }
-            ],
-            "predictions": []}
+        'data': {'image': '/data/local-files/?d=/home/long/Downloads/datasets/augment_padding/' + image.filename},
+        "annotations": [
+            {
+                "result": [
+                    {
+                        "original_width": img.shape[1],
+                        "original_height": img.shape[0],
+                        "image_rotation": 0,
+                        "value": {
+                            "points": coordinatePolygon,
+                            "polygonlabels": [
+                                "top-cmnd"
+                            ]
+                        },
+                        "id": "796e373c3a",
+                        "from_name": "label",
+                        "to_name": "image",
+                        "type": "polygonlabels",
+                        "origin": "manual"
+                    }
+                ]
+            }
+        ],
+        "predictions": []}
 
 
 @app.post('/yolo-id-card/request/')
 async def detect(data: str):
     image = base64.b64decode(data)
-    coordinateBoundingBox, coordinatePolygon, predictedImage = predict(image)
+    coordinateBoundingBox, coordinatePolygon, predictedImage = predict_yolov7(image)
     encoded_string = image_to_base64(predictedImage)
     return coordinateBoundingBox, {'polygon_coordinates': coordinatePolygon}, {"encoded_image": encoded_string}
 

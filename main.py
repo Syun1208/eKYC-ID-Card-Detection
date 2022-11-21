@@ -147,7 +147,7 @@ def predict_yolov5(image, filename, args):
         return [], [0, 0]
 
 
-def predict(image, filename, args):
+def predict_yolov7(image, filename, args):
     try:
         coordinateBoundingBox = []
         coordinateCompute = []
