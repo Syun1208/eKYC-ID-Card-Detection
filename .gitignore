@@ -3,6 +3,7 @@ weights/yolov5m
 weights/yolov5n
 weights/yolov7
 weights/yolov7x
+weights/yolov5l
 __pycache__/fast_api.cpython-38.pyc
 __pycache__/main.cpython-38.pyc
 data/preprocessing/__pycache__/
