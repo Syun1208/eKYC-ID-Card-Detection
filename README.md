@@ -74,7 +74,7 @@
 ## About The Project
 
 <a>
-    <img src="image/image-33.png" alt="Logo" width="500" height="250">
+    <img src="image/315110985_534092584937812_6201874043567503082_n.png" alt="Logo" width="500" height="250">
 </a>
 
 * In this day and age, we have many model detection such as Faster-RCNN, SDD, YOLO, and so on.
@@ -138,6 +138,68 @@ We suggest that you should use python version 3.8.12 to implement this repositor
 
 1. Preprocessing Data
 
+* Dataset size
+  ```shell
+      Total: 21777 images (100%)
+      Train: 10888 images (50%)
+      Val: 4355 images (20%)
+      Test: 6534 (30%)
+  ```
+* Data's label structure.
+  ```shell
+  [    
+    {
+        "image": "/home/long/Downloads/datasets/version1/top_132045101_13680_jpg.rf.6d2adba419f676ee9bbab8c5a277a1b2.jpg",
+        "id": 13946,
+        "label": [
+            {
+                "points": [
+                    [
+                        8.88888888888889,
+                        36.796875
+                    ],
+                    [
+                        86.25,
+                        37.1875
+                    ],
+                    [
+                        85.83333333333333,
+                        64.765625
+                    ],
+                    [
+                        9.305555555555555,
+                        64.609375
+                    ]
+                ],
+                "polygonlabels": [
+                    "top-cmnd"
+                ],
+                "original_width": 720,
+                "original_height": 1280
+            }
+        ],
+        "annotator": 9,
+        "annotation_id": 16871,
+        "created_at": "2022-09-27T11:06:56.424119Z",
+        "updated_at": "2022-09-27T11:06:58.197087Z",
+        "lead_time": 15.073
+    }, 
+    ......................
+  ]
+  ```
+* Folder structure trained on YOLOv7
+  ```shell
+    ├── test
+    │   ├── images
+    │   └── labels
+    ├── train
+    │   ├── images
+    │   └── labels
+    └── val
+        ├── images
+        └── labels
+  ```
+  
 * If you want custom datasets(json) to yolo's bounding box, please run this command line.
     ```sh
     python path/to/data/preprocessing/convertJson2YOLOv5Label.py --folderBoundingBox path/to/labels --folderImage path/to/images --imageSaveBoundingBox path/to/save/visualization --jsonPath path/to/json/label 
@@ -146,19 +208,29 @@ We suggest that you should use python version 3.8.12 to implement this repositor
     ```sh
     python path/to/data/preprocessing/convertJson2YOLOv54Corners.py --folderBoundingBox path/to/save/labels --folderPolygon path/to/save/labels --folderImage path/to/images --imageSaveBoundingBox path/to/save/visualization --imageSavePolygon path/to/save/visualization --jsonPath path/to/json/label
     ```
+* Padding your dataset containing image.
+  ```shell
+  python path/to/data/preprocessing/augment_padding_datasets.py --folder path/to/folder/images --folder_save --path/to/save/result
+  ```
 
 2. Testing on local computer
 
 * Put your image's option and run to see the result
   ```sh
-  python path/to/main.py --weights path/to/weight.onnx --cfg-detection yolov7 --img_path path/to/image 
+  python path/to/main.py --weights path/to/weight.pt --cfg-detection yolov7 --img_path path/to/image 
   ```
 
 3. Testing on API
 
-* You need change your local host and port which you want to config
+* You need change your local host and port which you want to configure
   ```sh
   python path/to/fast_api.py --local_host your/local/host --port your/port
+  ```
+4. Request to API
+
+* If you are down for requesting a huge of image to API, run this command
+  ```shell
+  python path/to/test_api.py --url link/to/api --source path/to/folder/images
   ```
 
 <!-- ROADMAP -->
@@ -178,8 +250,116 @@ We suggest that you should use python version 3.8.12 to implement this repositor
 See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (
 and known issues).
 
+<!-- CORRECTING IMAGE ORIENTATION -->
 
+## Correcting Image Orientation
 
+Based on the predicted bounding box,
+we will flip the image with 3 cases 90, 180, 270
+degrees by calculating the angle between vector Ox
+and vector containing coordinates top left and top right
+for vector AB with A as top left, B is the top right of the image as shown below.
+
+<a>
+    <img src="image/316366762_884260579409765_8308834300733637758_n.png" alt="Logo" width="" height="">
+</a>
+
+Let's assume that vector AB(xB - xA, yB-yA) is the combination between top_left(tl) and top_right(tr) coordination.
+Therefore, we will have the equation to rotate.
+
+<a>
+    <img src="image/312217271_697159021943134_5572773548216541792_n.png" alt="Logo" width="" height="">
+</a>
+
+On the other hand, if the image has the angle which is different with zero and greater than 180 degrees, the image will
+be considered with the condition below to rotate suitably.
+Otherwise, the angle will be rotated following the figure above.
+
+<a>
+      <img src="image/316087765_588800566339135_7958354505803597411_n.png" alt="Logo" width="" height="">
+</a>
+
+<a>
+      <img src="image/312512997_615147703719323_8867823975404687079_n.png" alt="Logo" width="" height="">
+</a>
+
+Finally we will flip in an anti-clockwise angle.
+
+<!-- RESULTS -->
+
+## Results
+
+1. Polygon Detection
+
+<a>
+      <img src="image/20211102_080019211115_1_jpg.rf.fcf9ddb1141a4a907e80954a81bef6be.jpg" alt="Logo" width="" height="">
+</a>
+
+2. Correcting Image Rotation
+
+<a>
+      <img src="image/312022710_3267220280262027_4254670571883733612_n.png" alt="Logo" width="" height="">
+</a>
+
+3. Image Alignment
+
+<a>
+      <img src="image/312706888_1494662461041784_7768521949859409984_n.png" alt="Logo" width="" height="">
+</a>
+
+4. Results in API
+    ```shell
+    [
+        {
+            "image_name": "back_sang1_jpg.rf.405e033a9ecb2fb3593541e6ae20d056.jpg"
+        },
+        [
+            {
+                "class_id": 0,
+                "class_name": "top_left",
+                "bbox_coordinates": [
+                    11,
+                    120,
+                    111,
+                    287
+                ],
+                "confidence_score": 0.76953125
+            },
+            {
+                "class_id": 1,
+                "class_name": "top_right",
+                "bbox_coordinates": [
+                    519,
+                    136,
+                    636,
+                    295
+                ],
+                "confidence_score": 0.85498046875
+            },
+            {
+                "class_id": 2,
+                "class_name": "bottom_right",
+                "bbox_coordinates": [
+                    524,
+                    383,
+                    636,
+                    564
+                ],
+                "confidence_score": 0.89697265625
+            },
+            {
+                "class_id": 3,
+                "class_name": "bottom_left",
+                "bbox_coordinates": [
+                    41,
+                    404,
+                    104,
+                    560
+                ],
+                "confidence_score": 0.7001953125
+            }
+        ]
+    ```
 
 <!-- CONTRIBUTING -->
 
@@ -209,7 +389,7 @@ and known issues).
 My Information - [LinkedIn](https://www.linkedin.com/in/syun-cet/) - longpm@unicloud.com.vn
 
 Project
-Link: [https://github.com/Syun1208/IDCardDetectionAndRecognition.git](https://github.com/your_username/repo_name)
+Link: [https://github.com/Syun1208/IDCardDetectionAndRecognition.git](https://github.com/Syun1208/IDCardDetectionAndRecognition.git)
 
 
 

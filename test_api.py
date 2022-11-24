@@ -26,6 +26,7 @@ def parse_arg():
     parser.add_argument('--port', type=str, help='your port connection', default='8000')
     parser.add_argument('--json_results', type=str, help='your json path results',
                         default=ROOT / 'results/results.json')
+    parser.add_argument('--url', type=str, help='link API', default='http://10.40.2.215:8000/id-card-yolo/detect/')
     parser.add_argument('--source', type=str, help='folder image test', default=ROOT / 'image')
     # parser.add_argument('--folder', type=str, help='folder image test', default=ROOT / 'image')
     # parser.add_argument('--image', type=str, help='image path', default=os.path.join(ROOT, 'image/long.jpg'))
@@ -36,7 +37,7 @@ def main():
     args = parse_arg()
     response = {}
     listResults = []
-    url = 'http://' + args.local_host + ':' + args.port + '/id-card-yolo/detect_label_studio/'
+    url = 'http://' + args.local_host + ':' + args.port + '/id-card-yolo/detect/'
     # with open(args.image, "rb") as image_file:
     #     data = base64.b64encode(image_file.read()).decode('utf-8')
     option = input('Do you want to show encoded image[Y/N]: ')
@@ -45,6 +46,8 @@ def main():
             file = {'image': open(os.path.join(args.source, image), 'rb')}
             data = {'option': option}
             response = requests.post(url=url, files=file, params=data)
+            if args.url:
+                response = requests.post(url=args.url, files=file, params=data)
             clear_output(wait=True)
             listResults.append(response.json())
             print(response.json(), '\n')

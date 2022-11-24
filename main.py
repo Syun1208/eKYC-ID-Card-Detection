@@ -9,6 +9,8 @@ import logging
 import io
 import matplotlib.pyplot as plt
 from PIL import Image
+import sorting
+from operator import itemgetter
 from tabulate import tabulate
 from plyer import notification
 import matplotlib.image as mpimg
@@ -35,8 +37,8 @@ def merge(arr, l, m, r):
     n1 = m - l + 1
     n2 = r - m
 
-    L = [0] * (n1)
-    R = [0] * (n2)
+    L = [0] * n1
+    R = [0] * n2
 
     for i in range(0, n1):
         L[i] = arr[l + i]
@@ -89,6 +91,9 @@ def parse_arg():
     parser.add_argument('--folder_save_detection', type=str,
                         default=str(ROOT / 'results/detect'),
                         required=False)
+    parser.add_argument('--folder_save_polygon', type=str,
+                        default=str(ROOT / 'results/polygon'),
+                        required=False)
     parser.add_argument('--option', type=int, help='activate 1 to open camera or 0 to add image')
     parser.add_argument('--device', default='', help='cuda device, i.e. 0 or 0,1,2,3 or cpu')
     return parser.parse_args()
@@ -103,13 +108,36 @@ def convertBoundingBox2Polygon(coordinates):
     for i in range(len(coordinates)):
         x_center = (coordinates[i][0] + coordinates[i][2]) / 2
         y_center = (coordinates[i][1] + coordinates[i][3]) / 2
-        coordinateVisualize.append((x_center, y_center))
+        # coordinateVisualize.append((x_center, y_center))
         coordinatePolygon[coordinates[i][-1]] = {classes[coordinates[i][-1]][0]: x_center,
                                                  classes[coordinates[i][-1]][1]: y_center}
-    coordinatePolygon = {'top_left': coordinatePolygon['top_left', 'top_right': coordinatePolygon['top_right'],
-                                     'bottom_right': coordinatePolygon['bottom_right'],
-                                     'bottom_left': coordinatePolygon['bottom_left']]}
+    coordinatePolygon = {'top_left': coordinatePolygon['top_left'], 'top_right': coordinatePolygon['top_right'],
+                         'bottom_right': coordinatePolygon['bottom_right'],
+                         'bottom_left': coordinatePolygon['bottom_left']}
+    coordinateVisualize = list(coordinatePolygon.values())
+    coordinateVisualize = [(coordinateVisualize[0]['x_min'], coordinateVisualize[0]['y_min']),
+                           (coordinateVisualize[1]['x_max'], coordinateVisualize[1]['y_min']),
+                           (coordinateVisualize[2]['x_max'], coordinateVisualize[2]['y_max']),
+                           (coordinateVisualize[3]['x_min'], coordinateVisualize[3]['y_max'])]
     return coordinatePolygon, np.array([coordinateVisualize], np.int32)
+
+
+def padding(img):
+    old_image_height, old_image_width, channels = img.shape
+
+    # create new image of desired size and color (blue) for padding
+    new_image_width = old_image_width + 100
+    new_image_height = old_image_height + 100
+    color = (255, 255, 255)
+    result = np.full((new_image_height, new_image_width, channels), color, dtype=np.uint8)
+
+    # compute center offset
+    x_center = (new_image_width - old_image_width) // 2
+    y_center = (new_image_height - old_image_height) // 2
+
+    # copy img image into center of result image
+    result[y_center:y_center + old_image_height, x_center:x_center + old_image_width] = img
+    return result
 
 
 def convertBoundingBox2PolygonForLabelStudio(coordinates):
@@ -155,9 +183,10 @@ def predict_yolov7(image, filename, args):
         weightPath = 'weights/yolov7x/yolov7x.pt'
         # backSub = cv2.createBackgroundSubtractorKNN()
         # mask = backSub.apply(image)
-        image = cv2.copyMakeBorder(image, int(image.shape[1] * 0.1), int(image.shape[1] * 0.1),
-                                   int(image.shape[1] * 0.1), int(image.shape[1] * 0.1), cv2.BORDER_CONSTANT,
-                                   value=[255, 255, 255])
+        # image = cv2.copyMakeBorder(image, int(image.shape[1] * 0.1), int(image.shape[1] * 0.1),
+        #                            int(image.shape[1] * 0.1), int(image.shape[1] * 0.1), cv2.BORDER_CONSTANT,
+        #                            value=[255, 255, 255])
+        image = padding(image)
         # Load weights
         pretrainedModel = weights()
         pretrainedYOLO = pretrainedModel.modelYOLOv7(weightPath)
@@ -179,6 +208,10 @@ def predict_yolov7(image, filename, args):
         coordinatePolygon, coordinateVisualize = convertBoundingBox2Polygon(coordinate)
         imagePolygon = cv2.polylines(cv2.resize(imageRotated, (640, 640)), [coordinateVisualize], True, (0, 255, 0),
                                      thickness=3)
+        if not os.path.exists(os.path.abspath(args.folder_save_polygon)):
+            os.makedirs(os.path.abspath(args.folder_save_polygon))
+        cv2.imwrite(os.path.join(os.path.abspath(args.folder_save_polygon), filename), imagePolygon)
+        # print(coordinateVisualize)
         if not os.path.exists(os.path.abspath(args.folder_save_detection)):
             os.makedirs(os.path.abspath(args.folder_save_detection))
         cv2.imwrite(os.path.join(os.path.abspath(args.folder_save_detection), filename), predictImage)
@@ -187,7 +220,7 @@ def predict_yolov7(image, filename, args):
             coordinate[i].pop(-1)
         print(imageRotated.shape)
         imageAlignment = processingROI(cv2.resize(imageRotated, (640, 640)), coordinate)
-        print(imageAlignment.suitable_cutting())
+        # print(imageAlignment.suitable_cutting())
         alignedImage = cv2.resize(imageAlignment(), (1290, 740))
         # Noise image processing
         # clearingImage = reduceBlur(alignedImage)
@@ -201,6 +234,7 @@ def predict_yolov7(image, filename, args):
                        "bbox_coordinates": coordinate[i].tolist(),
                        "confidence_score": score[i]}
             coordinateBoundingBox.append(results)
+        coordinateBoundingBox = sorted(coordinateBoundingBox, key=itemgetter('class_id'))
         return coordinateBoundingBox, coordinatePolygon, alignedImage
 
     except Exception as e:

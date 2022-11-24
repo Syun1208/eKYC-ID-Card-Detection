@@ -59,7 +59,7 @@ import sys
 import socket
 from starlette.responses import RedirectResponse
 
-app_desc = """<h2>Try this app by uploading any image with `predict/image`</h2>"""
+app_desc = """<h2>Made by`Pham Minh Long`</h2>"""
 app = FastAPI(title="Chúa tể phát hiện cccd/cmnd", description=app_desc)
 DETECTION_URL = '/id-card-yolo/detect/'
 LABEL_STUDIO = '/id-card-yolo/detect_label_studio/'
@@ -77,13 +77,15 @@ def parse_arg():
     parser = argparse.ArgumentParser()
     parser.add_argument('--local_host', type=str, help='your local host connection', default=IP_ADDRESS)
     parser.add_argument('--weights', type=str, help='initial weights path', default='weights/yolov7x/yolov7x.pt')
-
     parser.add_argument('--port', type=int, help='your port connection', default=8000)
     parser.add_argument('--folder_save_rotation', type=str,
                         default=str(ROOT) + '/results/correct',
                         required=False)
     parser.add_argument('--folder_save_detection', type=str,
                         default=str(ROOT) + '/results/detect',
+                        required=False)
+    parser.add_argument('--folder_save_polygon', type=str,
+                        default=str(ROOT / 'results/polygon'),
                         required=False)
     return parser.parse_args()
 
@@ -218,12 +220,12 @@ async def detect_label_studio(image: UploadFile = File(...), option: str = None)
         "predictions": []}
 
 
-@app.post('/yolo-id-card/request/')
-async def detect(data: str):
-    image = base64.b64decode(data)
-    coordinateBoundingBox, coordinatePolygon, predictedImage = predict_yolov7(image)
-    encoded_string = image_to_base64(predictedImage)
-    return coordinateBoundingBox, {'polygon_coordinates': coordinatePolygon}, {"encoded_image": encoded_string}
+# @app.post('/yolo-id-card/request/')
+# async def detect(data: str):
+#     image = base64.b64decode(data)
+#     coordinateBoundingBox, coordinatePolygon, predictedImage = predict_yolov7(image)
+#     encoded_string = image_to_base64(predictedImage)
+#     return coordinateBoundingBox, {'polygon_coordinates': coordinatePolygon}, {"encoded_image": encoded_string}
 
 
 # @app.post("/files/")
