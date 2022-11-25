@@ -34,10 +34,9 @@
 <br />
 <div align="center">
     <h3>Hi, I'm Long, author of this repository 🚀.</h3>
-  <a>
-    <img src="image/1_XWB1-GIPXTIr6ag2kQK_tg.png" alt="Logo" width="500" height="250">
-  </a>
-
+<a>
+    <img src="image/315110985_534092584937812_6201874043567503082_n.png" alt="Logo" width="" height="">
+</a>
 <h1 align="center">VIETNAMESE ID CARD DETECTION BASED ON YOLOV7</h1>
 </div>
 
@@ -72,11 +71,6 @@
 <!-- ABOUT THE PROJECT -->
 
 ## About The Project
-
-<a>
-    <img src="image/315110985_534092584937812_6201874043567503082_n.png" alt="Logo" width="500" height="250">
-</a>
-
 * In this day and age, we have many model detection such as Faster-RCNN, SDD, YOLO, and so on.
 * More specifically, we will apply the lastest version of YOLO, namely YOLOv7.
   In order to take ROI in ID Card, we additionally use Perspective Transform based on
