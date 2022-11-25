@@ -352,7 +352,28 @@ Finally we will flip in an anti-clockwise angle.
                 ],
                 "confidence_score": 0.7001953125
             }
-        ]
+        ],
+        {
+            "polygon_coordinates": {
+                "top_left": {
+                    "x_min": 61.0,
+                    "y_min": 203.5
+                },
+                "top_right": {
+                    "x_max": 577.5,
+                    "y_min": 215.5
+                },
+                "bottom_right": {
+                    "x_max": 580.0,
+                    "y_max": 473.5
+                },
+                "bottom_left": {
+                    "x_min": 72.5,
+                    "y_max": 482.0
+                }
+            }
+        }
+    ]
     ```
 
 <!-- CONTRIBUTING -->
