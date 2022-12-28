@@ -1,12 +1,21 @@
 import sys
-
-sys.path.insert(0, '/home/long/Desktop/IDCardDetectionandRecognition/yolov7')
+import os
+from pathlib import Path
 import torch
-from yolov7.models.yolo import Model
 # from yolov5.utils.downloads import attempt_download
 # from yolov5.utils.general import intersect_dicts
 # from yolov5.models.common import DetectMultiBackend
 
+FILE = Path(__file__).resolve()
+ROOT = FILE.parents[0]
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+WORK_DIR = os.path.dirname(ROOT)
+# Please clone github yolov7 (https://github.com/WongKinYiu/yolov7.git) in folder weights
+sys.path.insert(0, os.path.join(ROOT, 'yolov7'))
+
+from yolov7.models.yolo import Model
 
 class weights:
     def __init__(self):
