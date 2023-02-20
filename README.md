@@ -37,7 +37,7 @@
 <a>
     <img src="image/315110985_534092584937812_6201874043567503082_n.png" alt="Logo" width="" height="">
 </a>
-<h1 align="center">VIETNAMESE ID CARD DETECTION BASED ON YOLOV7</h1>
+<h1 align="center">YOLOV7-BASED VIETNAMESE ID CARD DETECTION</h1>
 </div>
 
 
